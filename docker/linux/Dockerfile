@@ -88,7 +88,7 @@ RUN mkdir riscv64-unknown-elf-gcc && \
 ###############################################################################
 # Build image for tool required by ESP32 builds
 ###############################################################################
-FROM nuttx-toolchlsain-base AS nuttx-toolchain-esp32
+FROM nuttx-toolchain-base AS nuttx-toolchain-esp32
 # Download the latest ESP32 GCC toolchain prebuilt by Espressif
 RUN mkdir xtensa-esp32-elf-gcc && \
   curl -s -L "https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp32-2019r1-rc2-linux-amd64.tar.xz" \

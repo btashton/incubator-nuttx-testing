@@ -34,43 +34,18 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Configure Buildkit
-        run: |
-          mkdir buildkit
-          curl -s -L "https://github.com/moby/buildkit/releases/download/v0.6.4/buildkit-v0.6.4.linux-amd64.tar.gz" | tar -C buildkit --strip-components 1 -xz
-
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
       - name: Build linux image
         run: |
-          IMAGE_CACHE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME-cache
-          echo "Building Linux Image using cache from $IMAGE_CACHE_ID"
-          sudo ./buildkit/buildkitd &
-          ./buildkit/buildctl build . \
-            --frontend dockerfile.v0 \
-            --export-cache type=registry,ref=$IMAGE_CACHE_ID \
-            --import-cache type=registry,ref=$IMAGE_CACHE_ID \
-            --local dockerfile=./docker/linux/ \
-            --output type=image,name=image,push=false
-
-      - name: Push image
-        if: github.event_name == 'push' && github.ref == 'master'
-        run: |
           IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
+          echo "Building Linux Image using cache from $IMAGE_CACHE_ID"
 
-          # Strip git ref prefix from version
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-
-          # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-
-          # Use Docker `latest` tag convention
-          [ "$VERSION" == "master" ] && VERSION=latest
-
-          echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
-
-          docker tag image $IMAGE_ID:$VERSION
-          docker push $IMAGE_ID:$VERSION
-
+          docker build \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            --cache-from $IMAGE_ID \
+            --tag $IMAGE_ID \
+            -f ./docker/linux/Dockerfile ./docker/
+          
+          docker push $IMAGE_ID
