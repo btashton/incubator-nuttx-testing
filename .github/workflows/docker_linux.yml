@@ -34,12 +34,25 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Build linux image
-        run: docker build . --file docker/linux/Dockerfile --tag image
+      - name: Configure Buildkit
+        run: |
+          mkdir buildkit
+          curl -s -L "https://github.com/moby/buildkit/releases/download/v0.6.4/buildkit-v0.6.4.linux-amd64.tar.gz" | tar -C buildkit --strip-components 1 -xz
 
       - name: Log into registry
-        if: github.event_name == 'push' && github.ref == 'master'
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: Build linux image
+        run: |
+          IMAGE_CACHE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME-cache
+          echo "Building Linux Image using cache from $IMAGE_CACHE_ID"
+          sudo ./buildkit/buildkitd &
+          ./buildkit/buildctl build . \
+            --frontend dockerfile.v0 \
+            --export-cache type=registry,ref=$IMAGE_CACHE_ID \
+            --import-cache type=registry,ref=$IMAGE_CACHE_ID \
+            --local dockerfile=./docker/linux/ \
+            --output type=image,name=image,push=false
 
       - name: Push image
         if: github.event_name == 'push' && github.ref == 'master'

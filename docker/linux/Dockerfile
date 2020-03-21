@@ -82,16 +82,16 @@ RUN mkdir pinguino-compilers && \
 FROM nuttx-toolchain-base AS nuttx-toolchain-riscv
 # Download the latest RISCV GCC toolchain prebuilt by SiFive
 RUN mkdir riscv64-unknown-elf-gcc && \
-  curl -s -l "https://static.dev.sifive.com/dev-tools/riscv64-unknown-elf-gcc-8.3.0-2019.08.0-x86_64-linux-ubuntu14.tar.gz" \
+  curl -s -L "https://static.dev.sifive.com/dev-tools/riscv64-unknown-elf-gcc-8.3.0-2019.08.0-x86_64-linux-ubuntu14.tar.gz" \
   | tar -C riscv64-unknown-elf-gcc --strip-components 1 -xz
 
 ###############################################################################
 # Build image for tool required by ESP32 builds
 ###############################################################################
-FROM nuttx-toolchain-base AS nuttx-toolchain-esp32
+FROM nuttx-toolchlsain-base AS nuttx-toolchain-esp32
 # Download the latest ESP32 GCC toolchain prebuilt by Espressif
 RUN mkdir xtensa-esp32-elf-gcc && \
-  curl -s -l "https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp32-2019r1-rc2-linux-amd64.tar.xz" \
+  curl -s -L "https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp32-2019r1-rc2-linux-amd64.tar.xz" \
   | tar -C xtensa-esp32-elf-gcc --strip-components 1 -xJ
 
 
