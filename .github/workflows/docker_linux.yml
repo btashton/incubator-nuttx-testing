@@ -31,21 +31,24 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DOCKER_BUILDKIT: 1
+      IMAGE_TAG: docker.pkg.github.com/${{ github.repository }}/nuttx-ci-linux
     steps:
       - uses: actions/checkout@v2
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: Build linux image
+      - name: Build Linux image
         run: |
-          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
-          echo "Building Linux Image using cache from $IMAGE_CACHE_ID"
+          echo "Building Linux Image using cache from $IMAGE_TAG"
 
           docker build \
             --build-arg BUILDKIT_INLINE_CACHE=1 \
-            --cache-from $IMAGE_ID \
-            --tag $IMAGE_ID \
+            --cache-from $IMAGE_TAG \
+            --tag $IMAGE_TAG \
             -f ./docker/linux/Dockerfile ./docker/
-          
-          docker push $IMAGE_ID
+        
+      - name: Push Linux image
+        if: github.event_name == 'push' && github.ref == 'master'
+        run: |
+          docker push $IMAGE_TAG
